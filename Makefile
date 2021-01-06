@@ -6,3 +6,6 @@ build-fill:
 deploy-fill:
 	rm lambdas/builds/fill/fill.zip
 	aws lambda update-function-code --function-name FillEvent --region us-west-2  --zip-file fileb://lambdas/builds/fill/fill.zip
+
+test:
+	go test ./lambdas/src -v
