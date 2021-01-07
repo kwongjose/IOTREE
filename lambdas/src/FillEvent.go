@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	TableName = "FillEvent"
+	tableName = "FillEvent"
 )
 
 // Data Item stuct for FillEvent
@@ -72,7 +72,7 @@ func makeDynamoInput(data fillData) *dynamodb.PutItemInput {
 
 	dynamoItem := dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(TableName),
+		TableName: aws.String(tableName),
 	}
 	return &dynamoItem
 }
