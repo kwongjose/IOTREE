@@ -21,6 +21,7 @@ const (
 // Data Item stuct for FillEvent
 type fillData struct {
 	Timestamp string
+	// Time in seconds
 	FlowTime  float32
 	FlowRate  float32
 	TotalFlow float32
@@ -31,7 +32,6 @@ func main() {
 }
 
 func handler(ctx context.Context, snsEvent events.SNSEvent) {
-	fmt.Println("STARTING")
 	for _, record := range snsEvent.Records {
 		snsRecord := record.SNS
 		fmt.Printf("[%s] Message = %s \n", snsRecord.Timestamp, snsRecord.Message)
@@ -40,13 +40,6 @@ func handler(ctx context.Context, snsEvent events.SNSEvent) {
 		dynamoItem := makeDynamoInput(fillItem)
 		addDynamoItem(dynamoItem)
 	}
-
-	// TEMP CODE
-	var FakeData = `{"Timestamp":"2021-01-02T15:04:05-07","FlowTime":30,"FlowRate":0.5,"TotalFlow":0.5}`
-
-	fillItem := makeFillItem(FakeData)
-	dynamoItem := makeDynamoInput(fillItem)
-	addDynamoItem(dynamoItem)
 
 }
 
@@ -89,7 +82,7 @@ func addDynamoItem(dynamoItem *dynamodb.PutItemInput) {
 		os.Exit(1)
 	}
 
-	fmt.Println("Successfully added '")
+	fmt.Println("Success")
 }
 
 // createDBClient creates a DynamoDB client session
