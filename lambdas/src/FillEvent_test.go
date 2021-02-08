@@ -48,6 +48,40 @@ func TestInjection(t *testing.T) {
 	}
 }
 
+func TestMakeDynamoInput(t *testing.T) {
+	input := fillData{
+		Timestamp: "2021-01-02T15:04:05-07",
+		FlowTime:  30,
+		FlowRate:  0.5,
+		TotalFlow: 0.5,
+	}
+
+	putItem := makeDynamoInput(input)
+
+	if *putItem.Item["FlowRate"].N != "0.5" {
+		t.Logf("FlowRate incorrect")
+		t.Fail()
+	}
+
+	if *putItem.Item["TotalFlow"].N != "0.5" {
+		t.Logf("TotalFlow incorrect")
+		t.Fail()
+	}
+	if *putItem.Item["FlowTime"].N != "30" {
+		t.Logf("FlowTime incorrect")
+		t.Fail()
+	}
+	if *putItem.Item["Timestamp"].S != "2021-01-02T15:04:05-07" {
+		t.Logf("Timestamp incorrect")
+		t.Fail()
+	}
+	if *putItem.TableName != "FillEvent" {
+		t.Logf("TableName incorrect")
+		t.Fail()
+	}
+
+}
+
 func TestMakeFillItem(t *testing.T) {
 	var FakeData = `{"Timestamp":"2021-01-02T15:04:05-07","FlowTime":30,"FlowRate":0.5,"TotalFlow":0.5}`
 	var testFail = false
