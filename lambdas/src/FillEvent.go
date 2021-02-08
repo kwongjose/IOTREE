@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
 const (
@@ -27,20 +28,41 @@ type fillData struct {
 	TotalFlow float32
 }
 
+type DynamoInterface struct {
+	Dynamo dynamodbiface.DynamoDBAPI
+}
+
 func main() {
+
 	lambda.Start(handler)
 }
 
 func handler(ctx context.Context, snsEvent events.SNSEvent) {
+	dynamoIter := DynamoInterface{
+		Dynamo: createDBClient(),
+	}
+
 	for _, record := range snsEvent.Records {
 		snsRecord := record.SNS
 		fmt.Printf("[%s] Message = %s \n", snsRecord.Timestamp, snsRecord.Message)
 
-		fillItem := makeFillItem(snsRecord.Message)
-		dynamoItem := makeDynamoInput(fillItem)
-		addDynamoItem(dynamoItem)
+		// runDB(snsRecord.Message, dynamoIter.Dynamo)
+		dynamoIter.runDB(snsRecord.Message)
 	}
+}
 
+// runDB uses dependency injection
+func runDB(message string, client dynamodbiface.DynamoDBAPI) error {
+	fillItem := makeFillItem(message)
+	dynamoItem := makeDynamoInput(fillItem)
+	return addDynamoItem(dynamoItem, client)
+}
+
+// runDB here uses the interface directly
+func (dyn DynamoInterface) runDB(message string) error {
+	fillItem := makeFillItem(message)
+	dynamoItem := makeDynamoInput(fillItem)
+	return addDynamoItem(dynamoItem, dyn.Dynamo)
 }
 
 // makeFillItem makes a new FillItem
@@ -71,18 +93,19 @@ func makeDynamoInput(data fillData) *dynamodb.PutItemInput {
 }
 
 // addItem adds a new fill event item to dynamodb
-func addDynamoItem(dynamoItem *dynamodb.PutItemInput) {
+func addDynamoItem(dynamoItem *dynamodb.PutItemInput, client dynamodbiface.DynamoDBAPI) error {
 	// Create DynamoDB client
-	svc := createDBClient()
+	// svc := createDBClient()
 
-	_, err := svc.PutItem(dynamoItem)
+	_, err := client.PutItem(dynamoItem)
 	if err != nil {
 		fmt.Println("Got error calling PutItem:")
 		fmt.Println(err.Error())
-		os.Exit(1)
+		return err
 	}
 
 	fmt.Println("Success")
+	return nil
 }
 
 // createDBClient creates a DynamoDB client session
